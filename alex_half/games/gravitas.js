@@ -1,10 +1,10 @@
 // Searches HTML document for element of canvas
 var canvas = document.querySelector('canvas');
 
-// canvas.width = window.innerWidth-50;
-// canvas.height = window.innerHeight;
-canvas.width = 900;
-canvas.height = 700;
+canvas.width = window.innerWidth-12;
+canvas.height = window.innerHeight-10;
+//canvas.width = 900;
+//canvas.height = 700;
 
 var moving = false;
 var c = canvas.getContext('2d');
@@ -12,11 +12,26 @@ var t = 0;
 var dt = .05;
 var mass = 10;
 var g = 9.81;
+var spring = 0.3; // Objects spring from one another, not rigid collission
 
 var keysDown = { 37:false, 38:false, 39:false, 40:false};
 var cannonX = 50; var cannonY = canvas.height-50;
 var cannonR = 100; var cannonTheta = Math.PI/4;
 var cannonBall = new Circle(1,1,1,1,1,"red");//Dummy
+gameState = "play"
+
+var circleArray = [];
+var blackHoleArray = [];
+var targetArray = [];
+
+// GAME SETTINGS
+var numBalls = 0;
+var numBlackHoles = 0;
+var numTargets = 1;
+
+var ballsIntercollide = true;
+
+// GAME SETTINGS
 
 window.addEventListener("keydown", function(e) {
   if(e.keyCode>=37 && e.keyCode<=40) { keysDown[e.keyCode] = true; }
@@ -24,7 +39,10 @@ window.addEventListener("keydown", function(e) {
 window.addEventListener("keyup", function(e) {
   if(e.keyCode>=37 && e.keyCode<=40) { keysDown[e.keyCode] = false; }
 });
+window.addEventListener("keypress", buttonpress, false);
 
+
+// Detects directional key inpur
 function processInput(currentFrameTime){
   if(keysDown[38]) { cannonR += 2; } // Up
   else if(keysDown[40]) { cannonR -= 2; } // Down
@@ -35,8 +53,6 @@ function processInput(currentFrameTime){
   }
 }
 
-window.addEventListener("keypress", buttonpress, false);
-
 function buttonpress(e){
   var keyCode = e.keyCode;
   console.log("You pressed " + keyCode);
@@ -46,7 +62,15 @@ function buttonpress(e){
   }
   if(keyCode == 13){ // ENTER
     // Restart the game when enter is pressed
-    initializeCannonball();
+    moving = true;
+    if ( gameState != "play" ){
+      gameState = "play";
+      initialize();
+      animate();
+    }else{
+      initialize();
+    }
+
   }
 };
 
@@ -59,6 +83,7 @@ function Circle( x, y, dx, dy, radius, color){
   this.dy = dy;
   this.radius = radius;
   this.color = color;
+  this.mass = radius*radius;
   // this acts as a method called draw
   this.draw = function( ){
     c.fillStyle = this.color;
@@ -82,25 +107,54 @@ function Circle( x, y, dx, dy, radius, color){
 
     // Hitting other circles
     for( var i = 0; i < circleArray.length; i++){
-      dist = Math.sqrt((circleArray[i].x-this.x)*(circleArray[i].x-this.x)+(circleArray[i].y-this.y)*(circleArray[i].y-this.y));
-      if ( dist < this.radius + circleArray[i].radius ){
-        this.dx = -this.dx;
-        this.dy = -this.dy;
-        circleArray[i].dx = -circleArray[i].dx;
-        circleArray[i].dy = -circleArray[i].dy;
-      }
 
+      yDist = (circleArray[i].y-this.y);
+      xDist = (circleArray[i].x-this.x);
+      dist = Math.sqrt(xDist*xDist+yDist*yDist);
+      massSum = this.mass + circleArray[i].mass;
+
+      minDist = (circleArray[i].radius + this.radius)*1.1;
+      if (dist < minDist) {
+        angle = Math.atan2(yDist, xDist);
+        targetX = this.x + Math.cos(angle) * minDist;
+        targetY = this.y + Math.sin(angle) * minDist;
+        ax = (targetX - circleArray[i].x) * spring;
+        ay = (targetY - circleArray[i].y) * spring;
+        this.dx -= ax * (circleArray[i].mass)/massSum;
+        this.dy -= ay * (circleArray[i].mass)/massSum;
+        circleArray[i].dx += ax * (this.mass)/massSum;
+        circleArray[i].dy += ay * (this.mass)/massSum;
+      }
     }
 
-    // Circle Gravity
+    // Circle Gravity from blackHoles
     for( var i = 0; i < blackHoleArray.length; i++){
-      yDist = Math.abs(blackHoleArray[i].y-this.y);
-      xDist = Math.abs(blackHoleArray[i].x-this.x);
+      yDist = (blackHoleArray[i].y-this.y);
+      xDist = (blackHoleArray[i].x-this.x);
       dist = Math.sqrt(xDist*xDist+yDist*yDist);
       forceGravity = 100000/(dist*dist);
+      forceGravityX = Math.sign(xDist)*forceGravity;
+      forceGravityY = Math.sign(yDist)*forceGravity;
 
-      this.dx += forceGravity*dt*(xDist/(xDist+yDist));
-      this.dy += forceGravity*dt*(yDist/(xDist+yDist));
+      this.dx += forceGravityX*dt;
+      this.dy += forceGravityY*dt;
+
+      if ( dist < this.radius + blackHoleArray[i].radius ){
+        // YOU LOSE
+        gameState = "lose";
+      }
+    }
+
+    // Check if target is hit, in which case you win
+    for( var i = 0; i < targetArray.length; i++){
+      yDist = (targetArray[i].y-this.y);
+      xDist = (targetArray[i].x-this.x);
+      dist = Math.sqrt(xDist*xDist+yDist*yDist);
+
+      if ( dist < this.radius + targetArray[i].radius ){
+        // YOU LOSE
+        gameState = "win";
+      }
     }
 
     // Friction
@@ -135,22 +189,37 @@ function drawCannon( ){
 }
 
 function animate(){
-  t += dt;
+  if( gameState === "play" ){
+    t += dt;
 
-  requestAnimationFrame(animate);
-  c.clearRect( 0, 0, innerWidth, innerHeight);
+    requestAnimationFrame(animate);
+    c.clearRect( 0, 0, innerWidth, innerHeight);
 
-  if (moving){cannonBall.updatePlayer();}
+    if (moving){cannonBall.updatePlayer();}
 
-  for( var i = 0; i < circleArray.length; i++){
-    circleArray[i].update();
+    for( var i = 0; i < targetArray.length; i++){
+      targetArray[i].update();
+    }
+    for( var i = 0; i < circleArray.length; i++){
+      circleArray[i].update();
+    }
+    for( var i = 0; i < blackHoleArray.length; i++){
+      blackHoleArray[i].update();
+    }
+
+    drawCannon();
+    processInput();
   }
-  for( var i = 0; i < blackHoleArray.length; i++){
-    blackHoleArray[i].update();
+  else if ( gameState === "lose" ){
+    c.fillStyle = "#000000";
+    c.fillText("YOU LOSE", canvas.width/2, canvas.height/2);
+    c.fillText("Press enter to restart, press space to change color.", canvas.width/2-90, canvas.height/2+12);
   }
-
-  drawCannon();
-  processInput();
+  else if ( gameState === "win" ){
+    c.fillStyle = "#000000";
+    c.fillText("YOU WIN", canvas.width/2, canvas.height/2);
+    c.fillText("Press enter to restart, press space to change color.", canvas.width/2-90, canvas.height/2+12);
+  }
 }
 
 function initializeCannonball(){
@@ -166,25 +235,44 @@ function initializeCannonball(){
 
 
 // Code that runs the game and calls the Functions
-var circleArray = [];
-var blackHoleArray = []
-for (var i = 1; i < 3; i++){
-  var radius = 15;
-  // Prevents circles getting stuck in sides
-  var x = Math.random() * (innerWidth-radius*2) + radius;
-  var y = Math.random() * (innerHeight-radius*2) + radius;
-  var dx = (Math.random()-0.5) * 3;
-  var dy = (Math.random()-0.5) * 3;
-  circleArray.push( new Circle( x, y, dx, dy, radius, "black") );
+function initialize(){
+  t = 0;
+  circleArray = [];
+  blackHoleArray = [];
+  targetArray = [];
+  // Fill bouncing ball array
+  for (var i = 1; i < numBalls+1; i++){
+    var radius = Math.random()*30 + 5;
+    // Prevents circles getting stuck in sides
+    var x = Math.random() * (innerWidth-radius*2) + radius;
+    var y = Math.random() * (innerHeight-radius*2) + radius;
+    var dx = (Math.random()-0.5) * 3;
+    var dy = (Math.random()-0.5) * 3;
+    circleArray.push( new Circle( x, y, dx, dy, radius, "black") );
+  }
+  // Fill black hole array
+  for (var i = 1; i < numBlackHoles+1; i++){
+    var radius = 10;
+    // Prevents circles getting stuck in sides
+    var x = Math.random() * (innerWidth-radius*2) + radius;
+    var y = Math.random() * (innerHeight-radius*2) + radius;
+    var dx = (Math.random()-0.5) * 0;
+    var dy = (Math.random()-0.5) * 0;
+    blackHoleArray.push( new Circle( x, y, dx, dy, radius, "red") );
+  }
+  // Fill target array
+  for (var i = 1; i < numTargets+1; i++){
+    var radius = 5;
+    // Prevents circles getting stuck in sides
+    var x = Math.random() * (innerWidth-radius*2) + radius;
+    var y = Math.random() * (innerHeight-radius*2) + radius;
+    var dx = 0;
+    var dy = 0;
+    targetArray.push( new Circle( x, y, dx, dy, radius, "yellow") );
+  }
+  initializeCannonball();
+
 }
-for (var i = 1; i < 2; i++){
-  var radius = 10;
-  // Prevents circles getting stuck in sides
-  var x = Math.random() * (innerWidth-radius*2) + radius;
-  var y = Math.random() * (innerHeight-radius*2) + radius;
-  var dx = (Math.random()-0.5) * 0;
-  var dy = (Math.random()-0.5) * 0;
-  blackHoleArray.push( new Circle( x, y, dx, dy, radius, "red") );
-}
-initializeCannonball();
-animate();
+
+initialize();
+animate(); // Animate is the main function that keeps everything going
