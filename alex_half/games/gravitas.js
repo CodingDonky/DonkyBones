@@ -210,10 +210,6 @@ function drawCannon( ){
   c.lineWidth=1;
 }
 
-function drawStars(){
-
-}
-
 function drawMenu(){
   c.font="12px Georgia";
   c.fillStyle = "#000000";
@@ -239,7 +235,7 @@ function animate(){
     drawMenu();
 
 
-
+    // Draw all objects (Except for cannon)
     for( var i = 0; i < starArray.length; i++){
       starArray[i].update();
     }
@@ -254,7 +250,6 @@ function animate(){
     }
     if (moving){cannonBall.updatePlayer();}
 
-    drawStars();
     drawCannon();
     processInput();
   }
