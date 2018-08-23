@@ -1,9 +1,9 @@
 // Searches HTML document for element of canvas
 var canvas = document.querySelector('canvas');
 
-canvas.width = window.innerWidth-12;
+canvas.width = window.innerWidth*0.8;
 canvas.height = window.innerHeight-10;
-canvas.height = window.innerWidth/1.6-10;
+canvas.height = window.innerWidth/2.3-10;
 //canvas.width = 900;
 //canvas.height = 700;
 
@@ -389,11 +389,23 @@ function animate(){
     // Fill with gradient
     c.fillStyle=gradient;
 
-    c.font="90px Georgia";
+    c.font="80px Georgia";
     //c.fillStyle = "#FFFFFF";
     c.fillText("YOU LOSE", canvas.width/2-canvas.width*0.2, canvas.height/2-canvas.height*0.1);
-    c.font="60px Georgia";
-    c.fillText("Press enter to restart the current level.", canvas.width/2-500, canvas.height/2+12);
+    c.font="40px Georgia";
+    c.fillText("Press enter to restart the current level.", canvas.width/2-300, canvas.height/2+12);
+
+    c.clearRect( canvas.width/2-305, canvas.height/2+20, canvas.width/2+10, canvas.height/2-75 );
+
+    c.font="16px Georgia";
+    c.fillStyle = "#000000";
+    c.fillText("Up and down arrow keys change speed of cue ball. ", canvas.width/2-300, canvas.height/2+40);
+    c.fillText("Right and left arrow keys change the angle at which you shoot. ", canvas.width/2-300, canvas.height/2+60);
+    c.fillText("W S A D keys to move your cue ball's starting point. ", canvas.width/2-300, canvas.height/2+80);
+    c.fillText("8-Balls are black, if you hit one in you lose. ", canvas.width/2-300, canvas.height/2+120);
+    c.fillText("If the cue ball goes in you lose.", canvas.width/2-300, canvas.height/2+140);
+    c.fillText("Hit in every colored pool ball to win the level. ", canvas.width/2-300, canvas.height/2+160);
+    c.fillText("If the time reached t=60 in the top left you lose. ", canvas.width/2-300, canvas.height/2+180);
   }
   else if ( gameState === "win" ){
     // Create gradient
@@ -404,11 +416,11 @@ function animate(){
     // Fill with gradient
     c.fillStyle=gradient;
 
-    c.font="90px Georgia";
+    c.font="80px Georgia";
     //c.fillStyle = "#FFFFFF";
     c.fillText("YOU WIN", canvas.width/2-canvas.width*0.2, canvas.height/2-canvas.height*0.1);
-    c.font="60px Georgia";
-    c.fillText("Press enter to move to the next level.", canvas.width/2-500, canvas.height/2+12);
+    c.font="40px Georgia";
+    c.fillText("Press enter to move to the next level.", canvas.width/2-300, canvas.height/2+12);
     level += 1;
   }
 }
