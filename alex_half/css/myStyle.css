@@ -15,7 +15,7 @@
     overflow: hidden;
     background-color: black;
 
-    padding-left: 5em;
+    padding-left: 5em; /* Space before first 'ADN' */
     /* padding-right: 15em; */
     /* display: inline-block; CUTS IT OFF */
     min-width: 1100px;
@@ -45,9 +45,9 @@
     padding-right: 90px;
     text-decoration: none;
     font-weight: bold;
-    -webkit-text-stroke: 1px gold;
+    -webkit-text-stroke: .1px gold;
 
-    font-family: 'Press Start 2P'; /* Pixelated */
+    font-family: 'Cinzel'; /* Pixelated */
 }
 
 #nav li a:hover:not(.active) {
@@ -68,6 +68,7 @@
 /* unvisited link */
 a:link {
     color: gold;
+
 }
 /* visited link */
 a:visited {
@@ -86,7 +87,8 @@ a:active {
 
 
 body {
- background: url("../images/marbledGold1.jpg") repeat;
+ background: url("../images/splotchyRed.jpg") repeat;
+ background-color: #990000;
 
  /* padding-left: 11em; */
  /* padding-right: 20em; */
@@ -100,6 +102,7 @@ body {
 .pagemid{
   /* background: url( "./images/goldGildedRedBackground.jpg" ); */
   background: black;
+  background: url("../images/textureStitched.jpg") repeat;
   padding-left: 1em;
   padding-right: 1em;
   padding-bottom: 1em;
@@ -107,25 +110,33 @@ body {
 
   margin-right: 9em;
   margin-left: 7em;
+  margin-right: 3em;
+  margin-left: 3em;
 
   outline-style: inset;
   outline-color: gold;
 
-  min-width: 1000px;
-  max-width: 1000px;
+  min-width: 1100px;
+  /* max-width: 1100px; */
 }
 
 h2{
   padding-top: 1em;
-  -webkit-text-stroke: 1px grey;
-  font-family: 'Press Start 2P'; /* Pixelated */
+  color: gold;
+  -webkit-text-stroke: .1px grey;
+  font-family: 'Cinzel', sans-serif; /* Professional & Pleasant */
 }
 
 p{
+  font-family: 'Montserrat', serif; /* Fantasy like */
+  color: gold;
+  -webkit-text-stroke: .8px grey;
+}
+
+.p_Fonts{
   font-family: 'Kanit', sans-serif; /* Looks like code */
   font-family: 'Cinzel', serif; /* Fantasy like */
-  font-family: 'Hind Vadodara', sans-serif; /* Most Normal */
-
+  font-family: 'Montserrat', sans-serif; /* Professional & Pleasant */
 }
 
 /* BUTTON STUFF */
